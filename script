@@ -48,9 +48,6 @@
         balance = parseFloat(immatureBalance) + parseFloat(confirmedBalance);
         actualPriceBTC = parseFloat(document.getElementById('statsMarketPriceBTCzen').innerHTML);
         btcValue = balance * actualPriceBTC;
-        console.log(balance);
-        console.log(actualPriceBTC);
-        console.log(btcValue);
         usdValue = parseFloat(document.getElementById('statsTotalImmatureUSD').innerHTML) + parseFloat(document.getElementById('statsTotalPendingUSD').innerHTML);
     }
 
@@ -72,7 +69,6 @@
 
     var powerBarUpdateInterval = setInterval(function(){
         updatePowerBar();
-        console.log('power bar updated');
     }, 5000);
 
 })();
