@@ -5,28 +5,74 @@
 // @description  try to take over the world!
 // @author       CryptoMisiak
 // @match        https://luckpool.org/workers/*
-// @grant        none
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    var immatureBalance = document.getElementById('statsTotalImmature');
-    var actualPriceBTC = document.getElementById('statsMarketPriceBTCzen');
+    var balance;
+    var btcValue;
+    var usdValue;
+    var actualPriceBTC;
+    var immatureBalance;
+    var confirmedBalance;
+    var blockchainBalance;
+
     var chartWrapper = document.getElementsByClassName("chartWrapper")[0];
     var container = chartWrapper.parentNode;
+    var addressElement = document.querySelector(".chartLabel big b");
+    var address = addressElement.innerHTML;
 
-    var div = document.createElement('div');
-    div.className = 'alert alert-danger text-center';
-    div.innerHTML = 'Waiting for data to be ready...';
-    container.insertBefore( div, chartWrapper );
+    var powerBar = document.createElement('div');
+    powerBar.className = 'alert alert-warning text-center';
+    powerBar.innerHTML = 'Enabling POWER MINING BAR...';
+    container.insertBefore( powerBar, chartWrapper );
 
-    var interval = setInterval(function(){
-        let btcValue = immatureBalance.innerHTML * actualPriceBTC.innerHTML;
-        if (isNaN(btcValue)) {
-            return;
-        }
-        div.innerHTML = 'Current BTC value: <b>' + btcValue.toFixed(8) + '</b>';
-        clearInterval(interval);
-    }, 1000);
+    function updateBlockchainBalance(){
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: "https://explorer.bitcoinz.site/ext/getbalance/"+address,
+            onload: function(res) {
+                blockchainBalance = res.responseText;
+            },
+            onerror: function(res) {
+                blockchainBalance = 'error';
+            }
+        });
+    }
+
+    function updateLocalBalance(){
+        immatureBalance = document.getElementById('statsTotalImmature').innerHTML;
+        confirmedBalance = document.getElementById('statsTotalBal').innerHTML;
+        balance = parseFloat(immatureBalance) + parseFloat(confirmedBalance);
+        actualPriceBTC = parseFloat(document.getElementById('statsMarketPriceBTCzen').innerHTML);
+        btcValue = balance * actualPriceBTC;
+        console.log(balance);
+        console.log(actualPriceBTC);
+        console.log(btcValue);
+        usdValue = parseFloat(document.getElementById('statsTotalImmatureUSD').innerHTML) + parseFloat(document.getElementById('statsTotalPendingUSD').innerHTML);
+    }
+
+    function updatePowerBar(){
+        powerBar.innerHTML = 'UNPAID: <b>' + Math.round(balance) + '</b> BTCZ / <b>$'+ Math.round(usdValue) +'</b> / <b>' + btcValue.toFixed(8) + ' BTC</b> | ' + 'BLOCKCHAIN BALANCE: <b>' + Math.round(blockchainBalance) + '</b> BTCZ';
+    }
+
+    updateLocalBalance();
+    updateBlockchainBalance();
+    updatePowerBar();
+    
+    var localBalanceInterval = setInterval(function(){
+        updateLocalBalance();
+    }, 5000);
+
+    var blockchainBalanceInterval = setInterval(function(){
+        updateBlockchainBalance();
+    }, 30000);
+
+    var powerBarUpdateInterval = setInterval(function(){
+        updatePowerBar();
+        console.log('power bar updated');
+    }, 5000);
+
 })();
